@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django related
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+
+# Secret key
+*.secret_key
+
+# Development
+*.sqlite3
+*.db
+*.bak
+
+# Environment variables
+.env
+
+# IDE files
+.vscode/
+.idea/
+
+# Static files
+staticfiles/
+
+# Deployment
+*.env
+
+# Others
+.DS_Store
+*.swp
+*.swo
+
+# venv (Python virtual environment)
+venv/
+venv/__init__.py
+
+# Django migrations
+*/migrations/
+*/migrations/__init__.py
+
+# Ignore all __init__.py files
+**/__init__.py
