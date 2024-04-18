@@ -263,3 +263,89 @@ def ContrastLargeCsvFiles(request):
             'Message': 'Exception occurred',
             'ExceptionDetails': str(ex)
         })
+
+@csrf_exempt
+def ContrastLargeCsvFile(request):
+    print("ContrastCsvFiles Started: " + str(datetime.datetime.now()))
+    
+    try:
+        # Extract data paths from JSON request
+        dic = json.loads(request.body)
+
+        path_file1 = dic['data1']
+        path_file2 = dic['data2']
+
+        if not (path_file1 and path_file2):
+            return JsonResponse({
+                'Status': -1,
+                'Message': 'Missing file paths',
+                'path_file1': str(path_file1),
+                'path_file2': str(path_file2)
+            })
+
+        # Read CSV files with low_memory=False to suppress DtypeWarning
+        df1 = pd.read_csv(path_file1, low_memory=False)
+        df2 = pd.read_csv(path_file2, low_memory=False)
+
+        # Ensure columns are in the same order and structure as df1
+        df2 = df2[df1.columns]
+
+        # Find new data from df2 compared to df1
+        new_in_df2 = df2[~df2.isin(df1.to_dict(orient='list')).all(axis=1)]
+
+        # Find new data from df1 compared to df2
+        new_in_df1 = df1[~df1.isin(df2.to_dict(orient='list')).all(axis=1)]
+
+        # Combine the new data from both files
+        combined_new_data = pd.concat([new_in_df1, new_in_df2])
+
+        # Save combined new data to a new CSV file
+        output_dir = os.path.join(os.getcwd(), 'output')
+        os.makedirs(output_dir, exist_ok=True)
+        file_date = str(datetime.datetime.now())
+        combined_new_data_path = os.path.join(output_dir, f"{file_date}_combined_new_data.csv")
+        combined_new_data.to_csv(combined_new_data_path, index=False)
+
+        # Calculate and include statistics in the response
+        initial_stats = {
+            "Rows in df1": len(df1),
+            "Rows in df2": len(df2),
+            "Unique rows in df1": df1.nunique().to_dict(),
+            "Unique rows in df2": df2.nunique().to_dict()
+        }
+
+        final_stats = {
+            "New rows in df1": len(new_in_df1),
+            "New rows in df2": len(new_in_df2),
+            "Total new rows": len(combined_new_data)
+        }
+
+        # Construct response
+        response = {
+            "Status": 1,
+            "Message": "CSV Files compared successfully.",
+            "CombinedNewDataPath": combined_new_data_path,
+            "InitialStatistics": initial_stats,
+            "FinalStatistics": final_stats
+        }
+        
+        print("ContrastCsvFiles Ended: " + str(datetime.datetime.now())) 
+        return JsonResponse(response)
+
+    except FileNotFoundError as fnf_error:
+        print('FileNotFoundError:', str(fnf_error))
+        print("ContrastCsvFiles Ended: " + str(datetime.datetime.now())) 
+        return JsonResponse({
+            'Status': -1,
+            'Message': 'File not found',
+            'ExceptionDetails': str(fnf_error)
+        })
+
+    except Exception as ex:
+        print('Exception:', str(ex))
+        print("ContrastCsvFiles Ended: " + str(datetime.datetime.now())) 
+        return JsonResponse({
+            'Status': -1,
+            'Message': 'Exception occurred',
+            'ExceptionDetails': str(ex)
+        })
