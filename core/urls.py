@@ -7,4 +7,5 @@ urlpatterns = [
     path('contrast/larges-csv', views.ContrastLargeCsvFiles, name="contrast-larges-csv"),
     
     path('contrast/large-csv', views.ContrastLargeCsvFile, name="contrast-large-csv")
+
 ]
